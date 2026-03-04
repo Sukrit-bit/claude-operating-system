@@ -19,6 +19,14 @@ Thumbs.db
 # Private documents (not for public repo)
 private/
 
+# Working state files (personal, not for public repo)
+CLAUDE.md
+MEMORY.md
+HANDOVER.md
+NEXT_SESSION_PROMPT.md
+learnings_for_Sukrit.md
+learnings_for_Sukrit_global.md
+
 # Environment
 .env
 .env.*
