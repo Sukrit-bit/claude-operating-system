@@ -16,6 +16,9 @@ Thumbs.db
 *.db
 *.sqlite
 
+# Private documents (not for public repo)
+private/
+
 # Environment
 .env
 .env.*
