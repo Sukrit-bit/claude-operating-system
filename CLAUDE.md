@@ -1,4 +1,4 @@
-# Learning From Building — Meta-Framework
+# Claude Operating System
 
 ## Identity
 

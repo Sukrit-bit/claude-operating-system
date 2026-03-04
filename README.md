@@ -1,4 +1,4 @@
-# Learning From Building
+# Claude Operating System
 
 A meta-framework for human-AI collaboration with Claude Code -- templates, skills, patterns, and enforcement mechanisms extracted from production AI builds.
 
