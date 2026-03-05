@@ -104,20 +104,17 @@ IMPORTANT: Always include the **Tags** line. These tags will power filtering and
 
 ---
 
-## PART C: HTML Dashboard
+## PART C: Visual Learnings Page
 
-After updating both markdown files, generate an interactive HTML dashboard.
+After updating both markdown files, generate a magazine-quality visual HTML page.
 
-**Read the visualize-learnings skill** at `~/.claude/skills/visualize-learnings/SKILL.md` for the full dashboard specification, then follow its instructions to generate `learnings_dashboard.html` in the project root.
+**Read the visualize-learnings skill** at `~/.claude/skills/visualize-learnings/SKILL.md` for the full specification, then follow its instructions to generate `learnings_dashboard.html` in the project root. The visualize-learnings skill uses the visual-explainer design system — editorial typography, depth hierarchy, anti-slop checks, and quality gates.
 
-If the visualize-learnings skill file is not accessible, generate a self-contained HTML dashboard with these requirements:
-- Read `learnings_for_Sukrit.md` from the project root as the data source
-- Parse all `## Session:` sections to extract dates, topics, learnings, and tags
-- Generate a single-file HTML page with inline CSS and JS (no external dependencies)
-- Include: stats header, tag frequency chart, filterable session timeline with expandable cards
-- Dark theme, responsive, clean typography
-- Write to `learnings_dashboard.html` in the project root
-- Confirm to the user: "Dashboard generated at learnings_dashboard.html"
+**Also read the visual-explainer's design references** before generating:
+- `~/.claude/skills/visual-explainer/references/css-patterns.md` — layout, depth tiers, animations
+- `~/.claude/skills/visual-explainer/references/libraries.md` — font pairings, theming
+
+This is NOT a data dashboard. It's a visually rich explanation of the project's learnings — the kind of output you'd expect from a well-designed magazine or world-class slide deck, rendered as an interactive HTML page.
 
 ---
 
