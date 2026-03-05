@@ -18,6 +18,9 @@ private/
 # Personal learning logs
 learnings_for_*.md
 
+# Generated dashboards
+learnings_dashboard.html
+
 # Working state (instance-level, not framework-level)
 MEMORY.md
 HANDOVER.md

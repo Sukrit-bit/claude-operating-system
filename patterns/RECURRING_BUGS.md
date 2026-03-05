@@ -96,3 +96,24 @@ Bugs that appeared across multiple projects. Each entry includes the pattern, ho
 - [ ] Test empirically: start at 2-3 concurrent workers, double until failures appear, back off one step
 - [ ] Build exponential backoff into every API call from day one — not as a fix, as a default
 - [ ] For sequential workflows, space requests 5-8 seconds apart as a baseline; tune from there
+
+---
+
+## Bug Class 6: Migration Residue
+
+**Pattern:** After migrating from System A to System B, references to System A survive in non-obvious locations (shell scripts, YAML configs, cron jobs, documentation), causing silent conflicts or confusion.
+
+**Appearances:** 4 times across 2 projects
+- Automated content pipeline (V12): Stale Resend API references survived after migrating to Gmail SMTP — old provider was still referenced in error handling and documentation
+- Automated content pipeline (V13/V14): Legacy launchd plist not disabled after migrating daily pipeline to GitHub Actions — both systems ran simultaneously
+- Automated content pipeline (V15): Dual automation ran for ~2 weeks with separate databases, producing different daily outputs. No errors, no alerts — just wrong results diverging silently
+- Meta-framework repo (Session 2): After renaming GitHub repo, stale references to old name survived across 4 locations (clone URLs, directory trees, document titles, `cd` commands)
+
+**Root Cause:** Migration checklists focus on "make System B work" but don't include "verify System A is fully decommissioned." The old system continues operating silently because it was never explicitly stopped or cleaned up. References to the old system in non-primary file types (shell scripts, YAML, markdown) are particularly easy to miss.
+
+**Prevention Checklist:**
+- [ ] After any migration, `grep -r "SYSTEM_A_NAME"` across ALL file types — not just source code
+- [ ] Explicitly disable/remove the old system (delete cron job, remove launchd plist, revoke API keys) — don't just stop using it
+- [ ] Check for separate state stores (databases, caches, config files) that the old system may still be reading/writing
+- [ ] Run the old system's trigger manually to verify it fails or is gone — don't trust "I stopped using it"
+- [ ] Add a calendar reminder 1 week post-migration to verify the old system hasn't silently restarted

@@ -64,6 +64,8 @@ claude-operating-system/
 - `/session-end` — End-of-session documentation checklist
 - `/new-project` — Bootstrap new project from templates
 - `/feedback-loop` — Cross-project learning review
+- `/learnings` — Dual-write learnings (project + global markdown) + generate HTML dashboard
+- `/visualize-learnings` — Generate interactive HTML dashboard from project learnings file
 
 ## Key References
 

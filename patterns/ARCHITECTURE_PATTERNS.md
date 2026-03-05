@@ -154,3 +154,30 @@ discovered
       → extracted        (entity extraction completed)
       → failed_extract   (entity extraction failed)
 ```
+
+---
+
+## Pattern 9: Defense-in-Depth
+
+**What:** Multiple independent validation or protection layers at different levels, so no single point of failure can cause incorrect output or system damage.
+
+**When to Use:** Any pipeline where correctness matters and a single check is insufficient. Especially important when working with LLMs (which are probabilistically unreliable) or external APIs (which fail in unpredictable ways).
+
+**How to Implement:**
+1. Identify the failure you're defending against (bad output, system hang, data corruption)
+2. Add protections at multiple independent levels — each layer should catch failures the others miss
+3. Layers should be genuinely independent: a prompt-level ban AND a regex post-filter, not two prompt-level bans
+4. Each layer should log when it catches something, so you know which layers are earning their keep
+5. Design so any single layer can fail without catastrophe — the remaining layers still protect
+
+**Examples:**
+- LLM output quality: Prompt-level structural bans ("NEVER start with...") + regex post-processing to catch violations the LLM ignores (~20% of the time)
+- Content filtering: API-level duration check + URL pattern matching + post-enrichment content validation (3 independent layers for YouTube Shorts filtering)
+- Pipeline reliability: Per-call timeouts (SIGALRM) + provider fallback chains + PID file for instance management = self-healing pipeline
+- Deployment safety: Test mode toggle + encryption at rest + legacy fallback path kept until new path is proven
+
+**Validated By:** An automated content pipeline — LLM blacklist instructions were ignored ~20% of the time; adding regex post-processing as a second layer caught every violation. A 3-layer Shorts filter eliminated 29% waste that no single layer caught completely.
+
+**Anti-Pattern:** Single layer of protection. Relying solely on prompt instructions for LLM output quality ("just tell it not to"). Relying solely on API timeouts without provider fallback. A single validation check that, when it fails, lets bad data flow through the entire pipeline unchecked.
+
+**Relationship to Pattern 1 (Fallback Chains):** Fallback Chains are one specific implementation of Defense-in-Depth focused on provider redundancy. Defense-in-Depth is the broader principle — multiple independent protections at different architectural levels, not just "try another provider."
