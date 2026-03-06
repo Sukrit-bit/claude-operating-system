@@ -1,11 +1,13 @@
 ---
 name: visualize-learnings
-description: Generate a magazine-quality interactive HTML page from the project's learnings file, using the visual-explainer design system
+description: Generate a Learning Studio — a concept-first, visually rich HTML page that teaches technical concepts from a project's learnings file. Uses architecture diagrams, synthesized deep dives, retrieval practice, and the visual-explainer design system.
 ---
 
-Transform a project's learnings file into a visually rich, editorially-designed HTML page. Not a data dashboard — a visual explanation of what was learned, designed to the same quality bar as the `/visual-explainer` skill.
+Transform a project's learnings file into a **Learning Studio** — a single HTML page designed to help you internalize technical concepts in 1-2 hours. Not a knowledge repository. Not a prettified markdown dump. A learning experience with synthesized knowledge, visual diagrams, and active recall.
 
 This skill can be invoked standalone or is called by the `/learnings` skill as Part C.
+
+**Core principle:** Organize by concept, not by session. Sessions are when you learned something. Concepts are what you learned. The "what" is infinitely more useful than the "when."
 
 ---
 
@@ -15,8 +17,9 @@ This skill can be invoked standalone or is called by the `/learnings` skill as P
 2. If not found, ask the user which file to visualize
 3. Read the entire file
 4. Also read the visual-explainer's design references before generating:
-   - `~/.claude/skills/visual-explainer/references/css-patterns.md` — layout, depth tiers, animations, responsive patterns
+   - `~/.claude/skills/visual-explainer/references/css-patterns.md` — layout, depth tiers, animations, overflow protection
    - `~/.claude/skills/visual-explainer/references/libraries.md` — font pairings, Mermaid theming, Chart.js, anime.js
+   - `~/.claude/skills/visual-explainer/references/responsive-nav.md` — sidebar nav with scroll-spy
 
 ---
 
@@ -24,167 +27,268 @@ This skill can be invoked standalone or is called by the `/learnings` skill as P
 
 Extract from the learnings file:
 
-- **Overview sections:** Big Picture, How the Codebase is Structured, Technologies Used (if present — first-run format)
-- **Sessions:** Each `## Session:` block (date, topic, "What We Did" summary, individual learnings)
-- **Learnings:** Each `####` heading within a session (title + body text)
-- **Tags:** If the file contains `Tags:` lines, extract them. If not, infer tags from content keywords
-- **Bugs and debugging stories:** Extract any bug-related content for the bug gallery
-- **Patterns and principles:** Extract any engineering principles or recurring patterns
+- **Overview sections:** Big Picture, How the Codebase is Structured, Technologies Used, LLM Pipeline, Email Design (whatever intro sections exist)
+- **Sessions:** Each `## Session:` block (date, topic, summary, individual learnings)
+- **Learnings:** Each `####` heading within a session (title + body text + code examples)
+- **Tags:** Extract from `Tags:` lines. If absent, infer from content keywords
+- **Bugs and debugging stories:** Extract bug-related content (look for "bug", "broke", "failed", "root cause", "fix")
+- **Code examples:** Preserve code blocks — these are critical for deep dives
+- **Patterns and principles:** Extract engineering principles, rules, and recurring patterns
 
 Count: total sessions, total learnings, total unique tags, tags by frequency.
 
 ---
 
-## Step 3: Choose Aesthetic Direction
+## Step 3: Cluster Learnings by Concept
 
-**Do not default to dark theme with blue accents.** Pick a direction that fits the project's personality:
+**This is the critical step that transforms a repository into a learning tool.**
 
-**Preferred for learnings:**
-- **Editorial** — Serif headlines (Instrument Serif or Crimson Pro), generous whitespace, muted earth tones or deep navy + gold. Feels like a well-designed journal.
-- **Paper/ink** — Warm cream `#faf7f5` background, terracotta/sage accents, informal feel. Feels like handwritten notes elevated to print quality.
+Group individual learnings into **concept clusters** — domains of related knowledge. Do NOT organize by session.
 
-**Also acceptable:**
-- **Blueprint** — Technical drawing feel, subtle grid background, deep slate/blue, monospace labels. Good for highly technical projects.
-- **IDE-inspired** — Use a specific named palette (Catppuccin, Rosé Pine, Gruvbox, Nord). Must commit to the actual palette.
+### How to cluster:
 
-**Forbidden:**
-- Neon dashboard (cyan + magenta + purple on dark)
-- Inter/Roboto with violet/indigo accents
-- Gradient text on headings
-- Animated glowing box-shadows
+1. **Tag co-occurrence:** Learnings sharing 2+ tags likely belong to the same cluster
+2. **Content similarity:** Learnings about the same system, API, or pattern cluster together
+3. **Causal chains:** If learning A explains why learning B matters, they cluster together
 
-**Vary the choice.** If this project already has a visual-explainer output in a particular aesthetic, pick a different one.
+### Target: 4-7 clusters per project
+
+Too few = too broad to learn from. Too many = feels like a bulleted list again.
+
+### Example clusters (from a data pipeline project):
+- **API Integration & Rate Limiting** — YouTube API, retry patterns, fallback strategies, silent failures
+- **Pipeline Architecture** — idempotency, resume-safety, status management, multi-source aggregation
+- **LLM & Prompt Engineering** — prompt design, context engineering, specification patterns, output control
+- **Email & Frontend Delivery** — HTML email constraints, visual hierarchy, CSS limitations, client compatibility
+- **Process & Meta-Engineering** — session management, documentation patterns, checklists, context budgets
+
+### For each cluster, determine:
+- **Cluster name** — a clear, memorable domain label (2-4 words)
+- **Member learnings** — which learnings belong (a learning can appear in multiple clusters if it bridges domains)
+- **Key patterns** — the 2-4 most important transferable patterns in this cluster
+- **Failure cases** — what breaks when you get this wrong
+- **Related clusters** — which other clusters connect to this one and why
 
 ---
 
-## Step 4: Generate the HTML Page
+## Step 4: Synthesize Knowledge
+
+For each cluster, **synthesize** — do not list. Write original explanatory content:
+
+### a. TL;DR (2-3 sentences)
+Not "here are 5 learnings about rate limiting." Instead: "Rate limiting is the default state of every external API you'll use. The critical insight is distinguishing silent failures (API returns None) from explicit errors (API throws). Your defense: status codes that differentiate 'no data exists' from 'failed to fetch', plus exponential backoff with jitter."
+
+### b. Architecture/Pattern Diagram
+Design a Mermaid diagram for each cluster. Pick the right diagram type:
+- **Flowchart** — for processes, pipelines, decision trees
+- **State machine** — for retry/backoff/failure patterns
+- **Sequence diagram** — for API interaction patterns
+- **ER diagram** — for data model relationships
+- **Mind map** — for concept relationships within a cluster
+
+The diagram must teach. Label edges with WHY, not just WHAT. Show the failure paths, not just the happy path.
+
+### c. Retrieval Practice Questions (2-3 per cluster)
+Generate questions from the actual failures and patterns. These must be:
+- **Specific** — reference actual systems, APIs, or patterns from the project
+- **Causal** — ask WHY something happens, not just WHAT
+- **Failure-grounded** — "What goes wrong if you don't..."
+
+Example: "Your transcript API returns None instead of raising RateLimitError. What's the downstream impact, and how should your status model handle this?"
+
+Answers are in collapsible `<details>` elements.
+
+---
+
+## Step 5: Extract Architecture
+
+From the learnings file's overview sections (Big Picture, Codebase Structure, Technologies Used, LLM Pipeline), generate:
+
+1. **System architecture diagram** — Mermaid flowchart showing components, data flow, external APIs, and storage. Annotate key decision points with WHY that architecture was chosen.
+
+2. **Subsystem detail** — If the file describes a specific subsystem in depth (e.g., an LLM pipeline, an email delivery chain), generate a focused diagram for it.
+
+3. **Technology map** — Visual grid of technologies used, grouped by layer (frontend, backend, APIs, infrastructure).
+
+If the learnings file has no overview sections, skip the Architecture Gallery and note this in the output.
+
+---
+
+## Step 6: Choose Aesthetic Direction
+
+**Editorial** is the default for Learning Studios — it signals "this is a place for serious learning."
+
+**Typography:** Instrument Serif + JetBrains Mono (refined, editorial, textbook feel)
+**Palette:** Deep blue + gold (`#1e3a5f` + `#d4a73a`) — premium, sophisticated
+**Both light and dark themes** via `prefers-color-scheme`
+
+**Depth hierarchy:**
+- **Hero** (elevated + accent-tinted) — project overview and growth stats
+- **Elevated** (shadow) — deep dive cards, architecture gallery
+- **Default** (flat) — concept map, principles wall
+- **Recessed** (inset) — bug museum, session journal, code blocks
+
+**Forbidden:** Neon dashboards, Inter/Roboto, violet/indigo accents, gradient text, animated glowing shadows, emoji in headers. See visual-explainer anti-slop rules.
+
+**Vary the choice** if the project already has a visual-explainer output in this aesthetic.
+
+---
+
+## Step 7: Generate the HTML Page
 
 Write a single self-contained HTML file to `learnings_dashboard.html` in the project root.
 
-### Design System Requirements
+### Page Structure — THE Information Hierarchy
 
-**Typography:** Pick a distinctive font pairing. Load via Google Fonts CDN with system font fallback.
+```
+[1. Hero — 5% of attention, growth stats]
+     ↓
+[2. Concept Map — 30%, THE navigation hub, Mermaid diagram]
+     ↓
+[3. Deep Dives — 40%, where learning happens, one per cluster]
+     ↓
+[4. Architecture Gallery — 10%] [5. Bug Museum — 10%] [6. Principles Wall — 5%]
+     ↓
+[7. Session Journal — appendix, collapsed, 0% unless specifically needed]
+```
 
-Good pairings for learnings:
-- Instrument Serif + JetBrains Mono (editorial, refined)
-- IBM Plex Sans + IBM Plex Mono (reliable, readable)
-- Bricolage Grotesque + Fragment Mono (bold, characterful)
-- DM Sans + Fira Code (technical, precise)
+Filters and search are NOT the top-level navigation. A **sticky sidebar** with concept map domains serves as the nav, with scroll-spy highlighting.
 
-**Forbidden as body font:** Inter, Roboto, Arial, Helvetica, system-ui alone.
+### Section Specifications
 
-**Color:** Use CSS custom properties for the full palette. Define: `--bg`, `--surface`, `--border`, `--text`, `--text-dim`, and 3-5 accent colors with dim variants. Support both light and dark via `prefers-color-scheme`.
-
-Good palettes: terracotta + sage, deep blue + gold, teal + slate, rose + cranberry.
-
-**Depth hierarchy:** Use four surface tiers:
-- **Hero** (elevated + accent-tinted) — for the project overview and key stats
-- **Elevated** (shadow) — for session cards
-- **Default** (flat) — for standard content
-- **Recessed** (inset) — for code blocks and secondary detail
-
-**Backgrounds:** Never flat solid. Use subtle gradients, faint grid patterns, or gentle radial glows.
-
-**Animation:** Staggered fade-ins on load. Mix types: `fadeUp` for cards, `fadeScale` for stats, `countUp` for numbers. Respect `prefers-reduced-motion`. No glowing, pulsing, or breathing effects.
-
-### Required Page Sections
-
-**1. Hero Section** (hero depth)
+**1. Hero: "Your Technical Growth"** (hero depth)
 - Project name, large and prominent
-- A one-line description of what this project is (from Big Picture section)
-- Key stats as large hero numbers: total sessions, total learnings, total unique tags
-- Last updated date
-- This section should dominate the viewport on load
+- One-line description (from Big Picture)
+- 3 stat cards: concepts mastered (= cluster count), bugs conquered (= bug count), sessions completed
+- Growth sparkline — SVG showing learning distribution over time (which weeks had the most learnings)
+- Two CTAs: "Explore the Concept Map" (scrolls to §2) / "Test Your Knowledge" (scrolls to first retrieval practice)
 
-**2. Project Overview** (elevated depth, collapsible via `<details>`)
-- Big Picture content — what the project is and why it matters
-- Architecture/structure visualization — if the learnings file describes the codebase structure, render it as a visual (CSS Grid cards or Mermaid diagram, not raw code block)
-- Technologies used — as a card grid, not a bulleted list
+**2. Concept Map** (default depth — THE primary view)
+- Mermaid diagram showing all concept clusters as nodes
+- Node size or visual weight proportional to number of learnings in the cluster
+- Edges connecting related clusters, labeled with the relationship (e.g., "failures feed into", "depends on", "pattern shared with")
+- Each node is clickable — scrolls to its Deep Dive section
+- Mermaid zoom controls required (+/−/reset, Ctrl+scroll, click-drag pan)
+- Use `flowchart TD` layout. Apply custom `themeVariables` matching the page palette.
+- Surround with a brief intro: "These are the technical domains you've developed expertise in across [N] sessions."
 
-**3. Tag Landscape** (default depth)
-- Visual tag frequency display — horizontal bars or a weighted tag cloud
-- Each tag is clickable to filter the timeline
-- Tags use deterministic colors from the chosen palette (hash tag name to select)
-- Show clear filter state and count
+**3. Deep Dives** (elevated depth — one card per concept cluster)
+Each cluster gets a self-contained `<article>` with:
 
-**4. Session Timeline** (the main body)
-- Cards in reverse chronological order (newest first)
-- Each card uses elevated depth with a left accent border
-- Card contents:
-  - **Date** as a styled monospace label with colored dot indicator
-  - **Topic** as a prominent heading
-  - **Summary** — always visible, well-typeset
-  - **Learnings** — each as a collapsible `<details>/<summary>` element
-    - Title as the toggle header
-    - Body text with proper prose formatting (paragraph spacing, inline code styling)
-  - **Tag pills** at the bottom — styled with the tag's deterministic color
-- Vary visual weight: the most recent session card can be slightly more prominent
+- **Cluster heading** — large, memorable name with learning count badge
+- **TL;DR** — 2-3 sentence synthesis (from Step 4a). Styled as a lead paragraph.
+- **Pattern Diagram** — Mermaid diagram for this cluster (from Step 4b). With zoom controls.
+- **Key Patterns** — 2-4 pattern cards, each with:
+  - Pattern name as a short rule ("Always distinguish 'no data' from 'fetch failed'")
+  - 1-2 sentence explanation
+  - Code example if available (from the learnings file, in a recessed code block)
+  - "When to apply" — one line
+- **Failure Cases** — What breaks when you get this wrong. Red/warm-bordered cards with:
+  - What happened (1 sentence)
+  - Root cause (1 sentence)
+  - Prevention pattern (1 sentence)
+- **Connected Concepts** — Clickable links to related deep dive sections with relationship label
+- **Retrieval Practice** — 2-3 questions in `<details>/<summary>` elements. Summary shows the question, details reveal the answer. Style the toggle distinctively (e.g., a "?" icon or "Test yourself" label).
 
-**5. Bug Gallery** (if bugs/debugging content exists)
-- Extract bug stories from learnings into a dedicated section
-- Each bug as a card with: what happened, root cause, fix
-- Visual severity/type indicators (styled spans, not emoji)
-- This section makes bugs scannable separate from the timeline
+**4. Architecture Gallery** (elevated depth)
+- System architecture diagram (from Step 5). Full-width Mermaid with zoom controls.
+- Subsystem diagrams if applicable
+- Technology grid — CSS Grid cards grouped by layer, not a bulleted list
+- Each diagram annotated with key decision text below it
+- Skip this section entirely if the learnings file has no overview/structure sections
 
-**6. Patterns and Principles** (if engineering principles exist)
-- Extract repeated themes, principles, and patterns
-- Present as a card grid with short titles and descriptions
-- These are the cross-cutting insights, not session-specific
+**5. Bug Museum** (recessed depth)
+- Organized by **bug class** (not by session):
+  - Silent Failures
+  - Status Mismatches
+  - Data Drift / Staleness
+  - Configuration Errors
+  - (whatever classes emerge from the data)
+- Each bug: compact card with What → Why → Fix → Prevent
+- Visual class indicators (colored left border per class)
+- Link to the relevant Deep Dive section
 
-**7. Search/Filter Bar** (sticky, above the timeline)
-- Text input that filters across all sections by keyword
-- Real-time filtering with debounce
-- Show match count
+**6. Principles Wall** (default depth)
+- Cross-cutting principles extracted from all learnings
+- Card grid (2-3 columns), each principle is:
+  - A short memorable rule (1 sentence)
+  - One line of context (where you learned this)
+- These should be insights you can internalize in 10 seconds each
+- Examples: "Checklists scale, vigilance doesn't" / "Defense in depth: validate at every layer boundary"
+
+**7. Session Journal** (recessed depth — APPENDIX)
+- **Collapsed by default** via `<details>/<summary>`
+- Labeled clearly: "Reference Archive — Session-by-Session Log"
+- Each session expandable: date, topic, summary, individual learnings
+- This is for reference lookup, not primary consumption
+- Reverse chronological order
+
+### Sidebar Navigation
+- Sticky left sidebar on desktop (collapses to horizontal bar on mobile)
+- Lists: Hero / Concept Map / each Deep Dive cluster name / Architecture / Bug Museum / Principles / Sessions
+- Scroll-spy highlighting — active section highlighted as you scroll
+- Follows the responsive-nav.md pattern from visual-explainer references
 
 ### Technical Requirements
-
 - Single self-contained `.html` file
 - CSS in `<style>` tags, JS in `<script>` tags
 - Google Fonts via CDN `<link>` (with system font fallback)
-- Optional: Mermaid via ESM CDN for architecture diagrams
+- Mermaid via ESM CDN — REQUIRED (not optional — concept map and deep dive diagrams need it)
 - Optional: anime.js via CDN for entrance animations (10+ elements)
-- Semantic HTML5 (`<article>`, `<section>`, `<header>`, `<details>`, `<summary>`)
+- Optional: Chart.js for growth sparkline (or use inline SVG)
+- Semantic HTML5 (`<article>`, `<section>`, `<nav>`, `<details>`, `<summary>`)
 - Both light and dark theme support via `prefers-color-scheme`
 - Responsive layout — readable on mobile
 - No overflow on any viewport width
-- Use safe DOM methods (createElement, textContent) — avoid innerHTML with dynamic data
+- Safe DOM methods (createElement, textContent) — avoid innerHTML with dynamic data
+- Mermaid: always `theme: 'base'` with custom `themeVariables`. Never define `.node` as a page-level CSS class.
 
 ---
 
-## Step 5: Quality Checks
+## Step 8: Quality Checks
 
 Before delivering, verify against these gates:
 
-1. **The squint test** — Blur your eyes. Can you perceive hierarchy? Are sections visually distinct?
-2. **The swap test** — Would replacing fonts and colors with a generic dark theme make it indistinguishable from a template? If yes, push the aesthetic further.
-3. **Both themes** — Toggle OS between light and dark. Both must look intentional.
-4. **Information completeness** — Does it capture all sessions and learnings from the source file?
-5. **No overflow** — Resize browser. No clipping or escaping.
-6. **The slop test** — Would a developer think "AI generated this"? Check for:
-   - Inter/Roboto with violet gradient accents
-   - Gradient text on every heading
-   - Emoji icons in section headers
-   - Glowing animated cards
-   - Perfectly uniform card grid with no hierarchy
-   - If 2+ present, regenerate with a constrained aesthetic
+1. **The learning test** — Could someone spend 1-2 hours with this page and walk away understanding the project's technical architecture, key patterns, and common pitfalls? If the answer is "they'd need to read the markdown file too," the page has failed.
+2. **The concept test** — Is the primary organization by concept, not by session? Is the concept map the first thing after the hero? Are deep dives synthesized explanations, not lists of session learnings?
+3. **The diagram test** — Are there at least N+1 Mermaid diagrams (1 concept map + 1 per deep dive)? Do they teach, not just decorate?
+4. **The retrieval test** — Are there specific, causal questions per cluster? Could a reader test themselves?
+5. **The hierarchy test** — Squint at the page. Can you see the information hierarchy? Is the concept map prominent? Is the session journal clearly an appendix?
+6. **The squint test** — Blur eyes. Sections visually distinct? Depth tiers evident?
+7. **The swap test** — Replace fonts/colors with a generic dark theme. Still distinguishable from a template?
+8. **Both themes** — Toggle OS light/dark. Both look intentional?
+9. **No overflow** — Resize browser. No clipping or escaping.
+10. **The slop test** — Inter/Roboto with violet accents? Gradient text on headings? Emoji icons? Glowing cards? Uniform card grid? If 2+ present, regenerate.
 
 ---
 
-## Step 6: Deliver and Report
+## Step 9: Deliver and Report
 
 1. Write to `learnings_dashboard.html` in the project root
 2. Open in browser: `open learnings_dashboard.html`
-3. Report: "Dashboard generated — X sessions, Y learnings, Z tags visualized"
-4. Note any parsing issues (malformed sections, missing dates)
+3. Report:
+   ```
+   Learning Studio generated:
+   - [N] concept clusters: [list cluster names]
+   - [N] architecture diagrams
+   - [N] retrieval practice questions
+   - [N] bug entries in museum
+   - [N] principles extracted
+   - [N] sessions in reference archive
+   ```
+4. Note any parsing issues or sections skipped due to insufficient data
 
 ---
 
 ## Rules
 
 - NEVER modify the source learnings file — read-only on input
-- Always overwrite `learnings_dashboard.html` (generated artifact)
-- If the learnings file has no `## Session:` sections, generate with whatever content exists
-- Must look good with 1 session or 50 sessions
-- Tag colors must be deterministic — same tag always produces the same color
-- Sections 5 and 6 (Bug Gallery, Patterns) are optional — only include if the content exists
-- The output should feel like opening a well-designed magazine, not a developer tool
+- Always overwrite `learnings_dashboard.html` (generated artifact, gitignored)
+- The concept map and deep dives are the CORE of the page. Everything else is supporting.
+- Diagrams are mandatory, not optional. If a cluster has no natural diagram, use a mind map showing concept relationships.
+- Retrieval questions must be specific to THIS project's learnings. Generic textbook questions are a failure.
+- Session journal is an APPENDIX — collapsed by default, at the bottom, visually recessed. Never the primary content.
+- Tag filters are NOT top-level navigation. They are a secondary tool within sections, if included at all.
+- Must work with 1 session or 50 sessions. With few sessions, clusters may be small — that's fine.
+- Synthesis means original explanatory text, not copy-pasted learning entries. The deep dive TL;DRs should read like a knowledgeable person explaining the topic, not like a list of bullet points reformatted.
+- Code examples from the learnings file are valuable — preserve and feature them in the relevant deep dive's Key Patterns section.
