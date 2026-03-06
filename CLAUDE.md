@@ -14,7 +14,6 @@ claude-operating-system/
 ├── patterns/       Cross-project patterns (recurring bugs, architectures, anti-patterns)
 ├── skills/         Claude Code slash commands — globally installed via install.sh
 ├── private/        Non-public docs (gitignored)
-├── docs/           Design docs and plans
 └── install.sh      Symlinks skills to ~/.claude/skills/ for global access
 ```
 
