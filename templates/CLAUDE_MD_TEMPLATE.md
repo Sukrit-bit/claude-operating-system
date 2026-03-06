@@ -86,7 +86,7 @@
 - **All file reads >100 lines → dispatch to subagent.** Return only the relevant excerpt or summary to the main thread.
 - **Progress updates → 3 lines max.** Never verbose explanations mid-task. Save prose for session-end summaries.
 - **Never echo pasted content back.** One-line confirmation only: "Got it — [topic], [N] lines."
-- **When context reaches ~60% → proactively warn the user** and begin session-end process. Don't wait to be asked.
+- **Auto-session-close:** `.claude/rules/context-monitor.md` enforces context budget thresholds. Heads-up at ~30 tool calls. Auto-close at ~50 tool calls (finishes current task, then runs /session-end automatically). Compaction triggers immediate Emergency Mode.
 - **Strategic context from user → capture in CLAUDE.md immediately.** Don't batch it for session end — it'll be lost.
 
 ---

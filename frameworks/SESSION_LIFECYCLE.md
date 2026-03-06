@@ -33,7 +33,7 @@
 - Capture gotchas immediately in CLAUDE.md Key Gotchas section
 - When user shares strategic context → add to CLAUDE.md immediately, don't wait
 - Use agent teams for independent tasks
-- At ~60% context → warn user, consider starting Phase 3 early
+- Context monitoring is enforced by `.claude/rules/context-monitor.md` — heads-up at ~30 tool calls, auto-close at ~50 tool calls, immediate Emergency Mode on compaction
 - When encountering a new bug: check RECURRING_BUGS.md — is this a known class?
 
 ---
@@ -85,10 +85,12 @@ This is a SPECIFICATION, not a summary.
 ---
 
 ## Emergency Session End
-**(Context compaction imminent)**
+**(Context compaction detected or imminent)**
 
 If context is critically low, minimum viable session end:
 
 1. **NEXT_SESSION_PROMPT.md** (most important — the next session needs this to function)
 2. **MEMORY.md "Action Required" update** (delivery mechanism for cross-session tasks)
 3. **Git commit**
+
+**Auto-close trigger:** If the context monitor rule (`.claude/rules/context-monitor.md`) reaches the auto-close threshold (~50 tool calls), the agent finishes its current task and runs /session-end automatically — no user approval needed. If compaction is detected, Emergency Mode activates immediately.

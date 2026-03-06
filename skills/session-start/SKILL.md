@@ -63,7 +63,13 @@ Present the plan clearly before beginning work:
 ### Context budget:
 - Subagent reads: [list of large files to read via agents]
 - Main thread reserved for: [user interaction, decisions, integration]
+
+### Context checkpoints:
+- After [first major deliverable]: context health check (report T/M counts)
+- Reserve last ~15 tool calls for /session-end
 ```
+
+Context checkpoints should be tied to specific deliverables in the plan, not just arbitrary tool call counts. Name the task after which to check.
 
 Wait for user confirmation or adjustment before proceeding to Step 4.
 

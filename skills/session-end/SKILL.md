@@ -8,6 +8,8 @@ triggers:
   - "close out"
   - "context approaching limits"
   - "emergency wrap up"
+  - "auto-close"
+  - "context checkpoint"
 ---
 
 # Session End Skill
@@ -22,9 +24,21 @@ Reference material:
 
 ---
 
+## Auto-Close Mode
+
+If this skill was triggered by the context monitor rule (auto-close at ~50 tool calls or ~40 turns):
+
+1. Execute the full 7-step checklist, but streamline each step — essential updates only.
+2. In Step 5 (Learnings), auto-generate learnings from the session instead of asking the user (they may not be present).
+3. Note in the Context Budget Report (Step 7): "Session closed by auto-close at ~[T] tool calls, ~[M] turns."
+
+If this skill was triggered by compaction detection, use Emergency Mode below instead.
+
+---
+
 ## Emergency Mode
 
-If context is critically low (user says "emergency wrap up" or similar), execute MINIMUM VIABLE CLOSE and skip to the end:
+If context is critically low (compaction detected, user says "emergency wrap up", or similar), execute MINIMUM VIABLE CLOSE and skip to the end:
 
 1. Create/update `NEXT_SESSION_PROMPT.md` (most important artifact)
 2. Update `MEMORY.md` "Action Required" section
