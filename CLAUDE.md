@@ -49,7 +49,7 @@ claude-operating-system/
 
 - Documentation-heavy project — use subagents for parallel file creation
 - Keep main thread for orchestration, dispatch agents for content creation
-- **Auto-session-close:** `.claude/rules/context-monitor.md` enforces context budget. Heads-up at ~30 tool calls, auto-close at ~50, Emergency Mode on compaction.
+- **Auto-session-close:** PostToolUse + PreCompact hooks (`~/.claude/hooks/`) provide accurate tool call counting. `.claude/rules/context-monitor.md` defines the policy — heads-up at 30, auto-close at 50, Emergency Mode on compaction.
 
 ## Session Protocol
 

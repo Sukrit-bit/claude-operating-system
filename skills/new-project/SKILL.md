@@ -35,6 +35,7 @@ Use AskUserQuestion to ask (one question at a time):
 
 - Create `.claude/rules/` directory for reference material
 - Copy `templates/rules/context-monitor.md` from the framework repo into `.claude/rules/context-monitor.md` — this enables auto-session-close at context budget thresholds
+- Note: the context monitor also requires hooks installed globally — running `install.sh` from the framework repo handles this automatically (symlinks hooks to `~/.claude/hooks/` and adds hook config to `~/.claude/settings.json`)
 - Create project-specific directories based on tech stack
 - Initialize git if not already done
 - Create `.gitignore` appropriate for the tech stack

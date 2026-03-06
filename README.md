@@ -23,7 +23,7 @@ Building on [Nate B. Jones' Four Prompting Disciplines](https://www.youtube.com/
 | Sequential work when tasks are independent | [Agent orchestration guide](guides/AGENT_ORCHESTRATION.md) + session-start proposes parallel execution by default |
 | Not knowing what Claude Code can do | [Capability map](guides/CAPABILITY_MAP.md) organized by workflow stage |
 | Inconsistent session quality | [Session lifecycle protocol](frameworks/SESSION_LIFECYCLE.md) enforced by session-start and session-end skills |
-| Context window exhaustion mid-session | [Context monitor rule](templates/rules/context-monitor.md) auto-closes sessions at ~50 tool calls and triggers Emergency Mode on compaction |
+| Context window exhaustion mid-session | [Context monitor rule](templates/rules/context-monitor.md) auto-closes sessions at ~50 tool calls and triggers Emergency Mode on compaction; hooks provide accurate counting (PostToolUse hook counts tool calls, PreCompact hook fires before compaction) |
 | Knowledge locked in individual projects | Feedback loop skill reviews cross-project learnings and promotes recurring patterns |
 
 ## What's Inside
@@ -35,6 +35,7 @@ Building on [Nate B. Jones' Four Prompting Disciplines](https://www.youtube.com/
 | [Guides](guides/) (2) | [Capability Map](guides/CAPABILITY_MAP.md), [Agent Orchestration](guides/AGENT_ORCHESTRATION.md) | What Claude Code can do, organized by workflow |
 | [Patterns](patterns/) (3) | [Recurring Bugs](patterns/RECURRING_BUGS.md), [Architecture Patterns](patterns/ARCHITECTURE_PATTERNS.md), [Anti-Patterns](patterns/ANTI_PATTERNS.md) | Cross-project wisdom from production AI builds |
 | Skills (4) | session-start, session-end, new-project, feedback-loop | Enforcement mechanisms, globally installed |
+| [Hooks](hooks/) (2) | [context-monitor.sh](hooks/context-monitor.sh), [pre-compact.sh](hooks/pre-compact.sh) | PostToolUse and PreCompact hooks for accurate tool-call counting |
 
 ## How to Use It
 
@@ -54,7 +55,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-This symlinks skills to `~/.claude/skills/` so they work in every Claude Code project. After installation, `/session-start`, `/session-end`, `/new-project`, and `/feedback-loop` are available globally. To use templates directly, copy them into a new project and adapt -- including `templates/rules/context-monitor.md`, which should be copied to `.claude/rules/context-monitor.md` in each project to enable automatic session-close at context budget thresholds.
+This symlinks skills to `~/.claude/skills/` and hooks to `~/.claude/hooks/`, then merges hook configuration into `~/.claude/settings.json` -- so both skills and hooks work globally across every Claude Code project. After installation, `/session-start`, `/session-end`, `/new-project`, and `/feedback-loop` are available globally, and the PostToolUse and PreCompact hooks are active for accurate context counting. To use templates directly, copy them into a new project and adapt -- including `templates/rules/context-monitor.md`, which should be copied to `.claude/rules/context-monitor.md` in each project to enable automatic session-close at context budget thresholds. The rule provides the policy; the hooks provide the accurate tool-call count that drives it.
 
 If the repo moves, re-run `install.sh` -- symlinks use absolute paths.
 

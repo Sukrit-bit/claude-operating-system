@@ -21,6 +21,9 @@ claude-operating-system/
 │   ├── RECURRING_BUGS.md
 │   ├── ARCHITECTURE_PATTERNS.md
 │   └── ANTI_PATTERNS.md
+├── hooks/                           # Claude Code hooks — sensor layer for context monitoring
+│   ├── context-monitor.sh            # PostToolUse hook — increments tool-call counter in a temp file
+│   └── pre-compact.sh               # PreCompact hook — fires before automatic context compression
 ├── templates/                       # Copied into new projects (never referenced in place)
 │   ├── CLAUDE_MD_TEMPLATE.md
 │   ├── MEMORY_MD_TEMPLATE.md
@@ -47,7 +50,7 @@ Claude Code has two instruction injection mechanisms: **rules** (`.claude/rules/
 
 The tradeoff: rules enforce automatically but tax every turn. Skills cost nothing when inactive but require the user to invoke them. The framework uses both -- rules for invariants, skills for workflows.
 
-The framework's first concrete rule template is [`templates/rules/context-monitor.md`](templates/rules/context-monitor.md) -- a context budget monitor that tracks tool calls and conversation turns, issues a heads-up at ~30 tool calls, and auto-closes the session at ~50 tool calls by invoking `/session-end` without user approval. This is the pattern the framework recommends for any standing constraint that must fire automatically: encode it as a rule, not a skill. The context monitor earns its per-turn token cost because the failure it prevents (context exhaustion with no handover) is catastrophic and unrecoverable.
+The framework's first concrete rule template is [`templates/rules/context-monitor.md`](templates/rules/context-monitor.md) -- a context budget monitor that issues a heads-up at ~30 tool calls and auto-closes the session at ~50 tool calls by invoking `/session-end` without user approval. The monitoring uses a hybrid architecture: a **PostToolUse hook** (sensor layer) maintains an accurate running count by incrementing a counter in a temp file after each tool call, and a **PreCompact hook** fires before automatic context compression to trigger an emergency close. The rules file ([`context-monitor.md`](templates/rules/context-monitor.md)) is the policy layer -- it defines what to do at each threshold. This separates mechanism (hooks, accurate counting) from policy (rules, threshold behavior). This is the pattern the framework recommends for any standing constraint that must fire automatically: encode the policy as a rule, back it with hooks for accurate sensing. The context monitor earns its per-turn token cost because the failure it prevents (context exhaustion with no handover) is catastrophic and unrecoverable.
 
 ### Symlinks vs. copies
 
@@ -111,7 +114,7 @@ The four skills form a session lifecycle loop:
 
 **[/session-start](skills/session-start/SKILL.md)** loads context in cache-optimal order (CLAUDE.md first since it is already auto-loaded, then MEMORY.md for action items, then NEXT_SESSION_PROMPT.md as session spec). Proposes a parallelized execution plan with context checkpoints tied to specific deliverables, and surfaces relevant bug patterns before work begins.
 
-**[/session-end](skills/session-end/SKILL.md)** enforces a 7-step checklist: update CLAUDE.md, update MEMORY.md, create NEXT_SESSION_PROMPT.md, capture learnings (dual-write to project + global files), git commit, and report context usage. Operates in three modes: normal (full 7-step checklist), auto-close (triggered by context monitor rule at ~50 tool calls -- streamlined checklist, no user approval needed), and emergency (compaction detected -- minimum viable close).
+**[/session-end](skills/session-end/SKILL.md)** enforces a 7-step checklist: update CLAUDE.md, update MEMORY.md, create NEXT_SESSION_PROMPT.md, capture learnings (dual-write to project + global files), git commit, and report context usage. Operates in three modes: normal (full 7-step checklist), auto-close (triggered by context monitor at ~50 tool calls -- streamlined checklist, no user approval needed), and emergency (PreCompact hook detected imminent compression -- minimum viable close). Tool-call counts are maintained accurately by the PostToolUse hook rather than by mental estimation.
 
 **[/new-project](skills/new-project/SKILL.md)** scaffolds a new project from templates. Asks four questions (identity, tech stack, scope, constraints), copies and fills templates, creates the directory structure, makes an initial commit.
 

@@ -37,7 +37,7 @@ Bugs that appeared across multiple projects. Each entry includes the pattern, ho
 - [ ] All file reads >100 lines → delegate to subagent, never read in main thread
 - [ ] Confirmations are one line only: "Saved 42K chars to source X" — never echo pasted content back
 - [ ] Progress updates max 3 lines; no pre-work plans, only post-work results
-- [ ] Ensure `.claude/rules/context-monitor.md` exists — this enforces auto-close at ~50 tool calls and Emergency Mode on compaction
+- [ ] Ensure `.claude/rules/context-monitor.md` exists and hooks are installed (`install.sh` handles this) — this enforces auto-close at ~50 tool calls and Emergency Mode on compaction
 - [ ] Delegate to subagents proactively to keep main thread tool call count low
 - [ ] Never echo pasted content back under any circumstances
 

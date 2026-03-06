@@ -33,7 +33,7 @@
 - Capture gotchas immediately in CLAUDE.md Key Gotchas section
 - When user shares strategic context → add to CLAUDE.md immediately, don't wait
 - Use agent teams for independent tasks
-- Context monitoring is enforced by `.claude/rules/context-monitor.md` — heads-up at ~30 tool calls, auto-close at ~50 tool calls, immediate Emergency Mode on compaction
+- Context monitoring is enforced by `.claude/rules/context-monitor.md` — heads-up at ~30 tool calls, auto-close at ~50 tool calls, immediate Emergency Mode on compaction. A PostToolUse hook (`~/.claude/hooks/context-monitor.sh`) maintains accurate tool call counts and injects system messages at thresholds; a PreCompact hook (`~/.claude/hooks/pre-compact.sh`) fires before automatic context compression. Claude responds to these injected messages per the policy in `.claude/rules/context-monitor.md`
 - When encountering a new bug: check RECURRING_BUGS.md — is this a known class?
 
 ---
@@ -93,4 +93,4 @@ If context is critically low, minimum viable session end:
 2. **MEMORY.md "Action Required" update** (delivery mechanism for cross-session tasks)
 3. **Git commit**
 
-**Auto-close trigger:** If the context monitor rule (`.claude/rules/context-monitor.md`) reaches the auto-close threshold (~50 tool calls), the agent finishes its current task and runs /session-end automatically — no user approval needed. If compaction is detected, Emergency Mode activates immediately.
+**Auto-close trigger:** When the PostToolUse hook (`~/.claude/hooks/context-monitor.sh`) reaches the auto-close threshold (~50 tool calls), it injects a system message into the conversation. Claude responds to that message by finishing its current task and running /session-end automatically — no user approval needed. When the PreCompact hook (`~/.claude/hooks/pre-compact.sh`) fires, its injected message triggers immediate Emergency Mode.
