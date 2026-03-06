@@ -23,13 +23,14 @@ Building on [Nate B. Jones' Four Prompting Disciplines](https://www.youtube.com/
 | Sequential work when tasks are independent | [Agent orchestration guide](guides/AGENT_ORCHESTRATION.md) + session-start proposes parallel execution by default |
 | Not knowing what Claude Code can do | [Capability map](guides/CAPABILITY_MAP.md) organized by workflow stage |
 | Inconsistent session quality | [Session lifecycle protocol](frameworks/SESSION_LIFECYCLE.md) enforced by session-start and session-end skills |
+| Context window exhaustion mid-session | [Context monitor rule](templates/rules/context-monitor.md) auto-closes sessions at ~50 tool calls and triggers Emergency Mode on compaction |
 | Knowledge locked in individual projects | Feedback loop skill reviews cross-project learnings and promotes recurring patterns |
 
 ## What's Inside
 
 | Category | Contents | Purpose |
 |---|---|---|
-| [Templates](templates/) (4) | [CLAUDE.md](templates/CLAUDE_MD_TEMPLATE.md), [MEMORY.md](templates/MEMORY_MD_TEMPLATE.md), [NEXT_SESSION_PROMPT](templates/NEXT_SESSION_PROMPT_TEMPLATE.md), [Learnings](templates/LEARNINGS_TEMPLATE.md) | Standardized project starters |
+| [Templates](templates/) (5) | [CLAUDE.md](templates/CLAUDE_MD_TEMPLATE.md), [MEMORY.md](templates/MEMORY_MD_TEMPLATE.md), [NEXT_SESSION_PROMPT](templates/NEXT_SESSION_PROMPT_TEMPLATE.md), [Learnings](templates/LEARNINGS_TEMPLATE.md), [Context Monitor Rule](templates/rules/context-monitor.md) | Standardized project starters + rule templates |
 | [Frameworks](frameworks/) (2) | [Four Disciplines](frameworks/FOUR_DISCIPLINES.md), [Session Lifecycle](frameworks/SESSION_LIFECYCLE.md) | Conceptual models with practical checklists |
 | [Guides](guides/) (2) | [Capability Map](guides/CAPABILITY_MAP.md), [Agent Orchestration](guides/AGENT_ORCHESTRATION.md) | What Claude Code can do, organized by workflow |
 | [Patterns](patterns/) (3) | [Recurring Bugs](patterns/RECURRING_BUGS.md), [Architecture Patterns](patterns/ARCHITECTURE_PATTERNS.md), [Anti-Patterns](patterns/ANTI_PATTERNS.md) | Cross-project wisdom from production AI builds |
@@ -39,7 +40,7 @@ Building on [Nate B. Jones' Four Prompting Disciplines](https://www.youtube.com/
 
 1. **Starting a new project** -- `/new-project` scaffolds from templates, giving every project a constraint architecture and session protocol from day one.
 2. **Starting any session** -- `/session-start` loads context in cache-optimal order and proposes a parallel execution plan before work begins.
-3. **Ending any session** -- `/session-end` enforces a 7-step documentation checklist (update CLAUDE.md, update MEMORY.md, create handover doc, write next-session spec, capture learnings, git commit, context budget report).
+3. **Ending any session** -- `/session-end` enforces a 7-step documentation checklist (update CLAUDE.md, update MEMORY.md, create handover doc, write next-session spec, capture learnings, git commit, context budget report). Sessions auto-close at ~50 tool calls via the [context monitor rule](templates/rules/context-monitor.md) -- no manual invocation needed.
 4. **Every few sessions** -- `/feedback-loop` reviews learnings across projects and surfaces recurring patterns worth documenting.
 5. **Capability discovery** -- [`guides/CAPABILITY_MAP.md`](guides/CAPABILITY_MAP.md) organizes what Claude Code can do by workflow stage.
 6. **Before building anything complex** -- [`frameworks/FOUR_DISCIPLINES.md`](frameworks/FOUR_DISCIPLINES.md) defines where effort should go beyond prompting.
@@ -53,7 +54,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-This symlinks skills to `~/.claude/skills/` so they work in every Claude Code project. After installation, `/session-start`, `/session-end`, `/new-project`, and `/feedback-loop` are available globally. To use templates directly, copy them into a new project and adapt.
+This symlinks skills to `~/.claude/skills/` so they work in every Claude Code project. After installation, `/session-start`, `/session-end`, `/new-project`, and `/feedback-loop` are available globally. To use templates directly, copy them into a new project and adapt -- including `templates/rules/context-monitor.md`, which should be copied to `.claude/rules/context-monitor.md` in each project to enable automatic session-close at context budget thresholds.
 
 If the repo moves, re-run `install.sh` -- symlinks use absolute paths.
 

@@ -25,7 +25,9 @@ claude-operating-system/
 │   ├── CLAUDE_MD_TEMPLATE.md
 │   ├── MEMORY_MD_TEMPLATE.md
 │   ├── NEXT_SESSION_PROMPT_TEMPLATE.md
-│   └── LEARNINGS_TEMPLATE.md
+│   ├── LEARNINGS_TEMPLATE.md
+│   └── rules/
+│       └── context-monitor.md       # Rule template — copy to .claude/rules/ in each project
 ├── skills/                          # Symlinked to ~/.claude/skills/ for global access
 │   ├── session-start/SKILL.md
 │   ├── session-end/SKILL.md
@@ -43,7 +45,9 @@ claude-operating-system/
 
 Claude Code has two instruction injection mechanisms: **rules** (`.claude/rules/` files, passive, auto-loaded every turn) and **skills** (`~/.claude/skills/` directories, invocable, zero cost when inactive). Rules are appropriate for standing constraints that must apply unconditionally. Skills are appropriate for procedural workflows triggered at specific moments.
 
-The tradeoff: rules enforce automatically but tax every turn. Skills cost nothing when inactive but require the user to invoke them. The framework uses both -- rules for invariants like "never echo pasted content," skills for workflows like the 7-step session-end checklist.
+The tradeoff: rules enforce automatically but tax every turn. Skills cost nothing when inactive but require the user to invoke them. The framework uses both -- rules for invariants, skills for workflows.
+
+The framework's first concrete rule template is [`templates/rules/context-monitor.md`](templates/rules/context-monitor.md) -- a context budget monitor that tracks tool calls and conversation turns, issues a heads-up at ~30 tool calls, and auto-closes the session at ~50 tool calls by invoking `/session-end` without user approval. This is the pattern the framework recommends for any standing constraint that must fire automatically: encode it as a rule, not a skill. The context monitor earns its per-turn token cost because the failure it prevents (context exhaustion with no handover) is catastrophic and unrecoverable.
 
 ### Symlinks vs. copies
 
@@ -58,6 +62,8 @@ This mirrors how a developer navigates a codebase: read the entry point, follow 
 ### 150-line template constraint
 
 [CLAUDE.md](CLAUDE.md) is auto-loaded every turn. A 300-line CLAUDE.md costs roughly 3-5% of context per turn, compounding across a session. The 150-line limit halves that. Enforcement: exceeding 150 lines triggers a mandatory split into template + `.claude/rules/` reference files. This is encoded as an escalation trigger in the [CLAUDE.md template](templates/CLAUDE_MD_TEMPLATE.md) itself.
+
+The context monitor rule ([`templates/rules/context-monitor.md`](templates/rules/context-monitor.md)) is the first example of this split in practice: context budget enforcement logic that must apply every turn lives in `.claude/rules/`, not inlined in CLAUDE.md. The [CLAUDE.md template](templates/CLAUDE_MD_TEMPLATE.md) references the rule with a one-line pointer rather than embedding the full threshold table.
 
 ### Constraint architecture as intent encoding
 
@@ -99,11 +105,13 @@ The four skills form a session lifecycle loop:
 
 ```
 /session-start --> [work] --> /session-end --> NEXT_SESSION_PROMPT.md --> /session-start
+                     ↑                ↑
+              context-monitor.md ─────┘  (auto-close at ~50 tool calls)
 ```
 
-**[/session-start](skills/session-start/SKILL.md)** loads context in cache-optimal order (CLAUDE.md first since it is already auto-loaded, then MEMORY.md for action items, then NEXT_SESSION_PROMPT.md as session spec). Proposes a parallelized execution plan and surfaces relevant bug patterns before work begins.
+**[/session-start](skills/session-start/SKILL.md)** loads context in cache-optimal order (CLAUDE.md first since it is already auto-loaded, then MEMORY.md for action items, then NEXT_SESSION_PROMPT.md as session spec). Proposes a parallelized execution plan with context checkpoints tied to specific deliverables, and surfaces relevant bug patterns before work begins.
 
-**[/session-end](skills/session-end/SKILL.md)** enforces a 7-step checklist: update CLAUDE.md, update MEMORY.md, create NEXT_SESSION_PROMPT.md, capture learnings (dual-write to project + global files), git commit, and report context usage. Includes an emergency mode for critically low context.
+**[/session-end](skills/session-end/SKILL.md)** enforces a 7-step checklist: update CLAUDE.md, update MEMORY.md, create NEXT_SESSION_PROMPT.md, capture learnings (dual-write to project + global files), git commit, and report context usage. Operates in three modes: normal (full 7-step checklist), auto-close (triggered by context monitor rule at ~50 tool calls -- streamlined checklist, no user approval needed), and emergency (compaction detected -- minimum viable close).
 
 **[/new-project](skills/new-project/SKILL.md)** scaffolds a new project from templates. Asks four questions (identity, tech stack, scope, constraints), copies and fills templates, creates the directory structure, makes an initial commit.
 
@@ -145,6 +153,8 @@ This symlinks every valid skill (directories under `skills/` containing a SKILL.
 ### Add a new template
 
 Add a Markdown file to `templates/`. Follow the 150-line constraint. Include HTML comment annotations for sections Claude will maintain -- annotations persist as inline instructions after skill context is unloaded.
+
+For rule templates (files intended for `.claude/rules/` in target projects), place them under `templates/rules/`. Rule templates are copied into each project's `.claude/rules/` directory, where Claude Code auto-loads them every turn. See [`templates/rules/context-monitor.md`](templates/rules/context-monitor.md) for the existing example.
 
 ### Add a new pattern
 

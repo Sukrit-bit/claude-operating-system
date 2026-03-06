@@ -34,6 +34,7 @@ Use AskUserQuestion to ask (one question at a time):
 ## Step 4: Set Up Directory Structure
 
 - Create `.claude/rules/` directory for reference material
+- Copy `templates/rules/context-monitor.md` from the framework repo into `.claude/rules/context-monitor.md` — this enables auto-session-close at context budget thresholds
 - Create project-specific directories based on tech stack
 - Initialize git if not already done
 - Create `.gitignore` appropriate for the tech stack
